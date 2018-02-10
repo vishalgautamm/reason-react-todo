@@ -20,7 +20,8 @@ let valueFromEvent = evt : string => (
 
 type action =
   | AddItem(string)
-  | ToggleItem(int);
+  | ToggleItem(int)
+  | DeleteItem(item);
 
 module Input = {
   let component = ReasonReact.reducerComponent("Input");
@@ -48,10 +49,11 @@ module Input = {
 
 module TodoItem = {
   let component = ReasonReact.statelessComponent("TodoItem");
-  let make = (~item, ~onToggle, children) => {
+  let completed = item => item.completed ? "completed" : "";
+  let make = (~item, ~onToggle, ~onDelete, children) => {
     ...component,
     render: (_) =>
-      <li>
+      <li className=(completed(item))>
         <div className="view">
           <input
             _type="checkbox"
@@ -60,7 +62,7 @@ module TodoItem = {
             onClick=(_evt => onToggle())
           />
           <label> (str(item.title)) </label>
-          <button className="destroy" />
+          <button className="destroy" onClick=(_evt => onDelete()) />
         </div>
       </li>
   };
@@ -92,9 +94,16 @@ let make = (_) => {
            item.id === id ? {...item, completed: ! item.completed} : item
          )
       |> (items => ReasonReact.Update({items: items}))
+    | DeleteItem(todo) =>
+      items
+      |> List.filter(item => item.id !== todo.id)
+      |> (items => ReasonReact.Update({items: items}))
     },
   render: self => {
-    let numItems = List.length(self.state.items);
+    let numItems =
+      self.state.items |> List.filter(item => ! item.completed) |> List.length;
+    let finishedItems =
+      self.state.items |> List.filter(item => item.completed) |> List.length;
     <div className="app">
       <section className="todoapp">
         <header className="header">
@@ -109,6 +118,7 @@ let make = (_) => {
                    <TodoItem
                      key=(string_of_int(item.id))
                      onToggle=(_event => self.send(ToggleItem(item.id)))
+                     onDelete=(_event => self.send(DeleteItem(item)))
                      item
                    />
                  )
@@ -125,6 +135,10 @@ let make = (_) => {
           </strong>
           (str(" todo left"))
         </span>
+        <div>
+          <strong> (str(string_of_int(finishedItems))) </strong>
+          (str(" Todos completed"))
+        </div>
       </div>
     </div>;
   }

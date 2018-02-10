@@ -30185,10 +30185,21 @@ var Input = /* module */[
 
 var component$1 = ReasonReact.statelessComponent("TodoItem");
 
-function make$1(item, onToggle, _) {
+function completed(item) {
+  var match = item[/* completed */2];
+  if (match !== 0) {
+    return "completed";
+  } else {
+    return "";
+  }
+}
+
+function make$1(item, onToggle, onDelete, _) {
   var newrecord = component$1.slice();
   newrecord[/* render */9] = (function () {
-      return React.createElement("li", undefined, React.createElement("div", {
+      return React.createElement("li", {
+                  className: completed(item)
+                }, React.createElement("div", {
                       className: "view"
                     }, React.createElement("input", {
                           className: "toggle",
@@ -30198,7 +30209,10 @@ function make$1(item, onToggle, _) {
                               return Curry._1(onToggle, /* () */0);
                             })
                         }), React.createElement("label", undefined, item[/* title */1]), React.createElement("button", {
-                          className: "destroy"
+                          className: "destroy",
+                          onClick: (function () {
+                              return Curry._1(onDelete, /* () */0);
+                            })
                         })));
     });
   return newrecord;
@@ -30206,6 +30220,7 @@ function make$1(item, onToggle, _) {
 
 var TodoItem = /* module */[
   /* component */component$1,
+  /* completed */completed,
   /* make */make$1
 ];
 
@@ -30225,7 +30240,12 @@ function newItem(title) {
 function make$2() {
   var newrecord = component$2.slice();
   newrecord[/* render */9] = (function (self) {
-      var numItems = List.length(self[/* state */2][/* items */0]);
+      var numItems = List.length(List.filter((function (item) {
+                    return 1 - item[/* completed */2];
+                  }))(self[/* state */2][/* items */0]));
+      var finishedItems = List.length(List.filter((function (item) {
+                    return item[/* completed */2];
+                  }))(self[/* state */2][/* items */0]));
       return React.createElement("div", {
                   className: "app"
                 }, React.createElement("section", {
@@ -30241,38 +30261,48 @@ function make$2() {
                             }, $$Array.of_list(List.map((function (item) {
                                         return ReasonReact.element(/* Some */[Pervasives.string_of_int(item[/* id */0])], /* None */0, make$1(item, (function () {
                                                           return Curry._1(self[/* send */4], /* ToggleItem */Block.__(1, [item[/* id */0]]));
+                                                        }), (function () {
+                                                          return Curry._1(self[/* send */4], /* DeleteItem */Block.__(2, [item]));
                                                         }), /* array */[]));
                                       }), self[/* state */2][/* items */0]))))), React.createElement("div", {
                       className: "footer"
                     }, React.createElement("span", {
                           className: "todo-count"
-                        }, React.createElement("strong", undefined, Pervasives.string_of_int(numItems) + (" " + pluralizeItems(numItems))), " todo left")));
+                        }, React.createElement("strong", undefined, Pervasives.string_of_int(numItems) + (" " + pluralizeItems(numItems))), " todo left"), React.createElement("div", undefined, React.createElement("strong", undefined, Pervasives.string_of_int(finishedItems)), " Todos completed")));
     });
   newrecord[/* initialState */10] = (function () {
       return /* record */[/* items : [] */0];
     });
   newrecord[/* reducer */12] = (function (action, param) {
       var items = param[/* items */0];
-      if (action.tag) {
-        var id = action[0];
-        var items$1 = List.map((function (item) {
-                var match = +(item[/* id */0] === id);
-                if (match !== 0) {
-                  return /* record */[
-                          /* id */item[/* id */0],
-                          /* title */item[/* title */1],
-                          /* completed */1 - item[/* completed */2]
-                        ];
-                } else {
-                  return item;
-                }
-              }), items);
-        return /* Update */Block.__(0, [/* record */[/* items */items$1]]);
-      } else {
-        return /* Update */Block.__(0, [/* record */[/* items : :: */[
-                      newItem(action[0]),
-                      items
-                    ]]]);
+      switch (action.tag | 0) {
+        case 0 : 
+            return /* Update */Block.__(0, [/* record */[/* items : :: */[
+                          newItem(action[0]),
+                          items
+                        ]]]);
+        case 1 : 
+            var id = action[0];
+            var items$1 = List.map((function (item) {
+                    var match = +(item[/* id */0] === id);
+                    if (match !== 0) {
+                      return /* record */[
+                              /* id */item[/* id */0],
+                              /* title */item[/* title */1],
+                              /* completed */1 - item[/* completed */2]
+                            ];
+                    } else {
+                      return item;
+                    }
+                  }), items);
+            return /* Update */Block.__(0, [/* record */[/* items */items$1]]);
+        case 2 : 
+            var todo = action[0];
+            var items$2 = List.filter((function (item) {
+                      return +(item[/* id */0] !== todo[/* id */0]);
+                    }))(items);
+            return /* Update */Block.__(0, [/* record */[/* items */items$2]]);
+        
       }
     });
   return newrecord;
