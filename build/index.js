@@ -30268,7 +30268,7 @@ function make$2() {
                       className: "footer"
                     }, React.createElement("span", {
                           className: "todo-count"
-                        }, React.createElement("strong", undefined, Pervasives.string_of_int(numItems) + (" " + pluralizeItems(numItems))), " todo left"), React.createElement("div", undefined, React.createElement("strong", undefined, Pervasives.string_of_int(finishedItems)), " Todos completed")));
+                        }, React.createElement("strong", undefined, Pervasives.string_of_int(numItems) + (" " + pluralizeItems(numItems))), " todo left"), React.createElement("strong", undefined, Pervasives.string_of_int(finishedItems)), " Todos completed", React.createElement("div", undefined)));
     });
   newrecord[/* initialState */10] = (function () {
       return /* record */[/* items : [] */0];

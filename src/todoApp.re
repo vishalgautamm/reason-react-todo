@@ -135,10 +135,9 @@ let make = (_) => {
           </strong>
           (str(" todo left"))
         </span>
-        <div>
-          <strong> (str(string_of_int(finishedItems))) </strong>
-          (str(" Todos completed"))
-        </div>
+        <strong> (str(string_of_int(finishedItems))) </strong>
+        (str(" Todos completed"))
+        <div />
       </div>
     </div>;
   }
