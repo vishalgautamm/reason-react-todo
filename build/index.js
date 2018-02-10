@@ -30125,10 +30125,12 @@ var Js_boolean  = __webpack_require__(208);
 var Pervasives  = __webpack_require__(195);
 var ReasonReact = __webpack_require__(87);
 
+var lastId = [0];
+
 function newItem() {
-  var lastId = 1;
+  lastId[0] = lastId[0] + 1 | 0;
   return /* record */[
-          /* id */lastId,
+          /* id */lastId[0],
           /* title */"Click a button",
           /* completed : true */1
         ];
@@ -30222,8 +30224,6 @@ function make$1() {
     });
   return newrecord;
 }
-
-var lastId = 0;
 
 exports.lastId    = lastId;
 exports.newItem   = newItem;

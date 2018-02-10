@@ -8,10 +8,12 @@ var Js_boolean  = require("bs-platform/lib/js/js_boolean.js");
 var Pervasives  = require("bs-platform/lib/js/pervasives.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 
+var lastId = [0];
+
 function newItem() {
-  var lastId = 1;
+  lastId[0] = lastId[0] + 1 | 0;
   return /* record */[
-          /* id */lastId,
+          /* id */lastId[0],
           /* title */"Click a button",
           /* completed : true */1
         ];
@@ -105,8 +107,6 @@ function make$1() {
     });
   return newrecord;
 }
-
-var lastId = 0;
 
 exports.lastId    = lastId;
 exports.newItem   = newItem;

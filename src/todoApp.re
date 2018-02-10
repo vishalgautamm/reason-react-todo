@@ -8,11 +8,11 @@ type item = {
 
 type state = {items: list(item)};
 
-let lastId = 0;
+let lastId = ref(0);
 
 let newItem = () => {
-  let lastId = lastId + 1;
-  {id: lastId, title: "Click a button", completed: true};
+  lastId := lastId^ + 1;
+  {id: lastId^, title: "Click a button", completed: true};
 };
 
 /* ========================================================== */
