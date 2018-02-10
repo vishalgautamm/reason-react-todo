@@ -82,28 +82,29 @@ let newItem =
   )
     ();
 
+/* Reducer function  */
+let reducer = (action, items) =>
+  switch action {
+  | AddItem(text) => ReasonReact.Update({items: [newItem(text), ...items]})
+  | ToggleItem(id) =>
+    items
+    |> List.map(item =>
+         item.id === id ? {...item, completed: ! item.completed} : item
+       )
+    |> (items => ReasonReact.Update({items: items}))
+  | DeleteItem(todo) =>
+    items
+    |> List.filter(item => item.id !== todo.id)
+    |> (items => ReasonReact.Update({items: items}))
+  };
+
 let make = (_) => {
   ...component,
   initialState: () => {items: []},
-  reducer: (action, {items}) =>
-    switch action {
-    | AddItem(text) => ReasonReact.Update({items: [newItem(text), ...items]})
-    | ToggleItem(id) =>
-      items
-      |> List.map(item =>
-           item.id === id ? {...item, completed: ! item.completed} : item
-         )
-      |> (items => ReasonReact.Update({items: items}))
-    | DeleteItem(todo) =>
-      items
-      |> List.filter(item => item.id !== todo.id)
-      |> (items => ReasonReact.Update({items: items}))
-    },
+  reducer: (action, {items}) => reducer(action, items),
   render: self => {
     let numItems =
       self.state.items |> List.filter(item => ! item.completed) |> List.length;
-    let finishedItems =
-      self.state.items |> List.filter(item => item.completed) |> List.length;
     <div className="app">
       <section className="todoapp">
         <header className="header">
@@ -135,9 +136,11 @@ let make = (_) => {
           </strong>
           (str(" todo left"))
         </span>
-        <strong> (str(string_of_int(finishedItems))) </strong>
-        (str(" Todos completed"))
-        <div />
+        <ul className="filters">
+          <li key="key-1"> (str("Filter 1")) </li>
+          <li key="key-2"> (str("Filter 2")) </li>
+          <li key="key-3"> (str("Filter 3")) </li>
+        </ul>
       </div>
     </div>;
   }

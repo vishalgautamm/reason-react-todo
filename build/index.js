@@ -30237,14 +30237,43 @@ function newItem(title) {
         ];
 }
 
+function reducer(action, items) {
+  switch (action.tag | 0) {
+    case 0 : 
+        return /* Update */Block.__(0, [/* record */[/* items : :: */[
+                      newItem(action[0]),
+                      items
+                    ]]]);
+    case 1 : 
+        var id = action[0];
+        var items$1 = List.map((function (item) {
+                var match = +(item[/* id */0] === id);
+                if (match !== 0) {
+                  return /* record */[
+                          /* id */item[/* id */0],
+                          /* title */item[/* title */1],
+                          /* completed */1 - item[/* completed */2]
+                        ];
+                } else {
+                  return item;
+                }
+              }), items);
+        return /* Update */Block.__(0, [/* record */[/* items */items$1]]);
+    case 2 : 
+        var todo = action[0];
+        var items$2 = List.filter((function (item) {
+                  return +(item[/* id */0] !== todo[/* id */0]);
+                }))(items);
+        return /* Update */Block.__(0, [/* record */[/* items */items$2]]);
+    
+  }
+}
+
 function make$2() {
   var newrecord = component$2.slice();
   newrecord[/* render */9] = (function (self) {
       var numItems = List.length(List.filter((function (item) {
                     return 1 - item[/* completed */2];
-                  }))(self[/* state */2][/* items */0]));
-      var finishedItems = List.length(List.filter((function (item) {
-                    return item[/* completed */2];
                   }))(self[/* state */2][/* items */0]));
       return React.createElement("div", {
                   className: "app"
@@ -30268,42 +30297,21 @@ function make$2() {
                       className: "footer"
                     }, React.createElement("span", {
                           className: "todo-count"
-                        }, React.createElement("strong", undefined, Pervasives.string_of_int(numItems) + (" " + pluralizeItems(numItems))), " todo left"), React.createElement("strong", undefined, Pervasives.string_of_int(finishedItems)), " Todos completed", React.createElement("div", undefined)));
+                        }, React.createElement("strong", undefined, Pervasives.string_of_int(numItems) + (" " + pluralizeItems(numItems))), " todo left"), React.createElement("ul", {
+                          className: "filters"
+                        }, React.createElement("li", {
+                              key: "key-1"
+                            }, "Filter 1"), React.createElement("li", {
+                              key: "key-2"
+                            }, "Filter 2"), React.createElement("li", {
+                              key: "key-3"
+                            }, "Filter 3"))));
     });
   newrecord[/* initialState */10] = (function () {
       return /* record */[/* items : [] */0];
     });
   newrecord[/* reducer */12] = (function (action, param) {
-      var items = param[/* items */0];
-      switch (action.tag | 0) {
-        case 0 : 
-            return /* Update */Block.__(0, [/* record */[/* items : :: */[
-                          newItem(action[0]),
-                          items
-                        ]]]);
-        case 1 : 
-            var id = action[0];
-            var items$1 = List.map((function (item) {
-                    var match = +(item[/* id */0] === id);
-                    if (match !== 0) {
-                      return /* record */[
-                              /* id */item[/* id */0],
-                              /* title */item[/* title */1],
-                              /* completed */1 - item[/* completed */2]
-                            ];
-                    } else {
-                      return item;
-                    }
-                  }), items);
-            return /* Update */Block.__(0, [/* record */[/* items */items$1]]);
-        case 2 : 
-            var todo = action[0];
-            var items$2 = List.filter((function (item) {
-                      return +(item[/* id */0] !== todo[/* id */0]);
-                    }))(items);
-            return /* Update */Block.__(0, [/* record */[/* items */items$2]]);
-        
-      }
+      return reducer(action, param[/* items */0]);
     });
   return newrecord;
 }
@@ -30316,6 +30324,7 @@ exports.Input          = Input;
 exports.TodoItem       = TodoItem;
 exports.component      = component$2;
 exports.newItem        = newItem;
+exports.reducer        = reducer;
 exports.make           = make$2;
 /* component Not a pure module */
 
