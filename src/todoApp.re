@@ -1,5 +1,3 @@
-/* ========================================================== */
-/* Declaring State */
 type item = {
   id: int,
   title: string,
@@ -8,31 +6,58 @@ type item = {
 
 type state = {items: list(item)};
 
-let lastId = ref(0);
-
-let newItem = () => {
-  lastId := lastId^ + 1;
-  {id: lastId^, title: "Click a button", completed: true};
-};
-
-/* ========================================================== */
-/* Components  */
-let component = ReasonReact.reducerComponent("TodoApp");
-
 let str = ReasonReact.stringToElement;
+
+let pluralize = (str, ending, n) => str ++ (n === 1 ? "" : ending);
+
+let pluralizeItems = pluralize("item", "s");
+
+let valueFromEvent = evt : string => (
+                                       evt
+                                       |> ReactEventRe.Form.target
+                                       |> ReactDOMRe.domElementToObj
+                                     )##value;
+
+type action =
+  | AddItem(string)
+  | ToggleItem(int);
+
+module Input = {
+  let component = ReasonReact.reducerComponent("Input");
+  let make = (~onSubmit, _) => {
+    ...component,
+    initialState: () => "",
+    reducer: (newText, _text) => ReasonReact.Update(newText),
+    render: self =>
+      <input
+        _type="text"
+        className="new-todo"
+        placeholder="Write something to do"
+        onChange=(_evt => self.send(valueFromEvent(_evt)))
+        onKeyDown=(
+          _evt =>
+            if (ReactEventRe.Keyboard.key(_evt) == "Enter") {
+              onSubmit(self.state);
+              self.send("");
+            }
+        )
+        value=self.state
+      />
+  };
+};
 
 module TodoItem = {
   let component = ReasonReact.statelessComponent("TodoItem");
-  let make = (~item, children) => {
+  let make = (~item, ~onToggle, children) => {
     ...component,
-    render: self =>
+    render: (_) =>
       <li>
         <div className="view">
           <input
+            _type="checkbox"
             className="toggle"
             checked=(Js.Boolean.to_js_boolean(item.completed))
-            onClick=(evt => Js.log("TODO: Implement Check buttton"))
-            _type="checkbox"
+            onClick=(_evt => onToggle())
           />
           <label> (str(item.title)) </label>
           <button className="destroy" />
@@ -41,30 +66,51 @@ module TodoItem = {
   };
 };
 
-let make = children => {
+let component = ReasonReact.reducerComponent("TodoApp");
+
+let newItem =
+  (
+    () => {
+      let lastId = ref(-1);
+      title => {
+        lastId := lastId^ + 1;
+        {id: lastId^, title, completed: false};
+      };
+    }
+  )
+    ();
+
+let make = (_) => {
   ...component,
-  initialState: () => {
-    items: [
-      {id: 1, title: "Learn ReasonML", completed: false},
-      {id: 2, title: "Learn ReasonML", completed: false},
-      {id: 3, title: "Learn ReasonML", completed: false}
-    ]
-  },
-  reducer: ((), _) => ReasonReact.NoUpdate,
-  render: ({state: {items}}) => {
-    let numItems = List.length(items);
+  initialState: () => {items: []},
+  reducer: (action, {items}) =>
+    switch action {
+    | AddItem(text) => ReasonReact.Update({items: [newItem(text), ...items]})
+    | ToggleItem(id) =>
+      items
+      |> List.map(item =>
+           item.id === id ? {...item, completed: ! item.completed} : item
+         )
+      |> (items => ReasonReact.Update({items: items}))
+    },
+  render: self => {
+    let numItems = List.length(self.state.items);
     <div className="app">
       <section className="todoapp">
         <header className="header">
           <h1> (str("todos Reason")) </h1>
-          <input className="new-todo" placeholder="What needs to be done" />
+          <Input onSubmit=(text => self.send(AddItem(text))) />
         </header>
         <section className="main">
           <ul className="todo-list">
             (
-              items
+              self.state.items
               |> List.map(item =>
-                   <TodoItem key=(string_of_int(item.id)) item />
+                   <TodoItem
+                     key=(string_of_int(item.id))
+                     onToggle=(_event => self.send(ToggleItem(item.id)))
+                     item
+                   />
                  )
               |> Array.of_list
               |> ReasonReact.arrayToElement
@@ -74,7 +120,9 @@ let make = children => {
       </section>
       <div className="footer">
         <span className="todo-count">
-          <strong> (str(string_of_int(numItems))) </strong>
+          <strong>
+            (str(string_of_int(numItems) ++ " " ++ pluralizeItems(numItems)))
+          </strong>
           (str(" todo left"))
         </span>
       </div>
