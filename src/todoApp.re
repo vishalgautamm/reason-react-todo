@@ -1,10 +1,20 @@
-type item = {
+type todo = {
   id: int,
   title: string,
+  editing: bool,
   completed: bool
 };
 
-type state = {items: list(item)};
+/* Filter State */
+type filterState =
+  | All
+  | Active
+  | Completed;
+
+type state = {
+  items: list(todo),
+  filter: filterState
+};
 
 let str = ReasonReact.stringToElement;
 
@@ -21,7 +31,10 @@ let valueFromEvent = evt : string => (
 type action =
   | AddItem(string)
   | ToggleItem(int)
-  | DeleteItem(item);
+  | DeleteItem(todo)
+  | Clear
+  | All
+  | Reset;
 
 module Input = {
   let component = ReasonReact.reducerComponent("Input");
@@ -76,41 +89,53 @@ let newItem =
       let lastId = ref(-1);
       title => {
         lastId := lastId^ + 1;
-        {id: lastId^, title, completed: false};
+        {id: lastId^, title, completed: false, editing: false};
       };
     }
   )
     ();
 
 /* Reducer function  */
-let reducer = (action, items) =>
+let reducer = (action, {items, filter}) =>
   switch action {
-  | AddItem(text) => ReasonReact.Update({items: [newItem(text), ...items]})
+  | AddItem(text) =>
+    ReasonReact.Update({items: [newItem(text), ...items], filter: All})
   | ToggleItem(id) =>
     items
     |> List.map(item =>
          item.id === id ? {...item, completed: ! item.completed} : item
        )
-    |> (items => ReasonReact.Update({items: items}))
+    |> (items => ReasonReact.Update({items, filter}))
   | DeleteItem(todo) =>
     items
     |> List.filter(item => item.id !== todo.id)
-    |> (items => ReasonReact.Update({items: items}))
+    |> (items => ReasonReact.Update({items, filter}))
+  | Clear =>
+    items
+    |> List.filter(item => item.completed == false)
+    |> (items => ReasonReact.Update({items, filter}))
+  | All => ReasonReact.Update({items, filter})
+  | Reset =>
+    items
+    |> List.filter(item => item.completed == true)
+    |> (items => ReasonReact.Update({items, filter}))
   };
 
+/* Main Function */
 let make = (_) => {
   ...component,
-  initialState: () => {items: []},
-  reducer: (action, {items}) => reducer(action, items),
+  initialState: () => {items: [], filter: All},
+  reducer: (action, {items, filter}) => reducer(action, {items, filter}),
   render: self => {
     let numItems =
       self.state.items |> List.filter(item => ! item.completed) |> List.length;
-    <div className="app">
+    <div>
       <section className="todoapp">
         <header className="header">
           <h1> (str("todos Reason")) </h1>
           <Input onSubmit=(text => self.send(AddItem(text))) />
         </header>
+        /* Main Application -- Start */
         <section className="main">
           <ul className="todo-list">
             (
@@ -128,20 +153,35 @@ let make = (_) => {
             )
           </ul>
         </section>
+        /* Main Application -- End */
+        <div className="footer">
+          <span className="todo-count">
+            <strong>
+              (str(string_of_int(numItems) ++ " " ++ pluralizeItems(numItems)))
+            </strong>
+            (str(" left"))
+          </span>
+          <ul className="filters">
+            <li key="key-all">
+              <a
+                className="selected"
+                href="#"
+                onClick=(_event => self.send(All))>
+                (str("All"))
+              </a>
+            </li>
+            <li key="key-completed">
+              <a className="" href="#" onClick=(_event => self.send(Reset))>
+                (str("Reset"))
+              </a>
+            </li>
+          </ul>
+          <button
+            className="clear-completed" onClick=(_event => self.send(Clear))>
+            (str("Clear Completed "))
+          </button>
+        </div>
       </section>
-      <div className="footer">
-        <span className="todo-count">
-          <strong>
-            (str(string_of_int(numItems) ++ " " ++ pluralizeItems(numItems)))
-          </strong>
-          (str(" todo left"))
-        </span>
-        <ul className="filters">
-          <li key="key-1"> (str("Filter 1")) </li>
-          <li key="key-2"> (str("Filter 2")) </li>
-          <li key="key-3"> (str("Filter 3")) </li>
-        </ul>
-      </div>
     </div>;
   }
 };
